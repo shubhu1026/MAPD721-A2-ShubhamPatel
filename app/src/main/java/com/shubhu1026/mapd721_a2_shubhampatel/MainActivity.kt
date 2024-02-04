@@ -19,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.shubhu1026.mapd721_a2_shubhampatel.ui.theme.MAPD721A2ShubhamPatelTheme
 
 class MainActivity : ComponentActivity() {
@@ -95,20 +96,24 @@ fun ContactManager(context: ComponentActivity) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Button(
                     onClick = {
                         shouldLoadContacts.value = true
                     },
+                    modifier = Modifier
+                        .weight(1f)
                 ) {
                     Text("Load Contacts")
                 }
-
+                
                 Spacer(modifier = Modifier.width(16.dp))
-
+                
                 Button(
                     onClick = { shouldSaveContact.value = true },
+                    modifier = Modifier
+                        .weight(1f)
                 ) {
                     Text("Add Contact")
                 }
@@ -118,7 +123,7 @@ fun ContactManager(context: ComponentActivity) {
             Text(
                 "Contacts:",
                 modifier = Modifier.padding(bottom = 8.dp),
-                style = TextStyle(fontWeight = FontWeight.Bold)
+                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)
             )
         }
 
@@ -134,7 +139,7 @@ fun ContactManager(context: ComponentActivity) {
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(contact.displayName, modifier = Modifier.padding(bottom = 4.dp))
+                    Text(contact.displayName, modifier = Modifier.padding(bottom = 4.dp), style = TextStyle(fontSize = 16.sp))
                     Text(
                         contact.phoneNumber,
                         color = Color.Gray
@@ -147,19 +152,24 @@ fun ContactManager(context: ComponentActivity) {
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            Text(
-                "Student Name",
-                modifier = Modifier.padding(bottom = 8.dp),
-                style = TextStyle(fontWeight = FontWeight.Bold)
-            )
-            Text("Shubham Patel", modifier = Modifier.padding(bottom = 8.dp))
+            Row {
+                Text(
+                    "Student Name: ",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                )
+                Text("Shubham Patel")
 
-            Text(
-                "Student Number",
-                modifier = Modifier.padding(bottom = 8.dp),
-                style = TextStyle(fontWeight = FontWeight.Bold)
-            )
-            Text("301366205", modifier = Modifier.padding(bottom = 16.dp))
+            }
+
+            Row {
+                Text(
+                    "Student Number: ",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                )
+                Text("301366205")
+            }
         }
     }
 }
