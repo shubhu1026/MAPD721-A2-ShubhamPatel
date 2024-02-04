@@ -2,8 +2,6 @@ package com.shubhu1026.mapd721_a2_shubhampatel
 
 import android.annotation.SuppressLint
 import android.content.ContentProviderOperation
-import android.content.ContentUris
-import android.content.ContentValues
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.widget.Toast
@@ -12,18 +10,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.shubhu1026.mapd721_a2_shubhampatel.ui.theme.MAPD721A2ShubhamPatelTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +36,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class Contact(val displayName: String)
+data class Contact(val displayName: String, val phoneNumber: String)
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -53,10 +47,6 @@ fun ContactManager(context: ComponentActivity) {
 
     val shouldLoadContacts = remember { mutableStateOf(false) }
     val shouldSaveContact = remember { mutableStateOf(false) }
-
-    //contacts = loadContacts(context = context)
-
-    var isFetchingContacts by remember { mutableStateOf(false) }
 
     if (shouldLoadContacts.value) {
         contacts = loadContacts(context = context)
@@ -120,7 +110,14 @@ fun ContactManager(context: ComponentActivity) {
         // Contacts List
         LazyColumn {
             items(contacts) { contact ->
-                Text(contact.displayName, modifier = Modifier.padding(8.dp))
+                Column(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(contact.displayName, modifier = Modifier.padding(bottom = 4.dp))
+                    Text(contact.phoneNumber, modifier = Modifier.padding(top = 4.dp), color = Color.Gray)
+                }
             }
         }
     }
@@ -131,21 +128,23 @@ fun ContactManager(context: ComponentActivity) {
 fun loadContacts(context: ComponentActivity): List<Contact> {
     val contacts = mutableListOf<Contact>()
 
-    // Use the content resolver to query contacts
     context.contentResolver.query(
-        ContactsContract.Contacts.CONTENT_URI,
-        arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
+        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+        arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        ),
         null,
         null,
-        ContactsContract.Contacts.DISPLAY_NAME
+        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
     )?.use { cursor ->
-        // Check if the cursor has data
         if (cursor.moveToFirst()) {
             do {
-                // Retrieve display name from the cursor and add to the list
                 val displayName =
-                    cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY))
-                contacts.add(Contact(displayName))
+                    cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val phoneNumber =
+                    cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                contacts.add(Contact(displayName, phoneNumber))
             } while (cursor.moveToNext())
         }
     }
