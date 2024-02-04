@@ -1,16 +1,29 @@
 package com.shubhu1026.mapd721_a2_shubhampatel
 
+import android.annotation.SuppressLint
+import android.content.ContentProviderOperation
+import android.content.ContentUris
+import android.content.ContentValues
 import android.os.Bundle
+import android.provider.ContactsContract
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.shubhu1026.mapd721_a2_shubhampatel.ui.theme.MAPD721A2ShubhamPatelTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,25 +35,181 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    ContactManager(context = this)
                 }
             }
         }
     }
 }
 
+data class Contact(val displayName: String)
+
+@SuppressLint("UnrememberedMutableState")
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
+fun ContactManager(context: ComponentActivity) {
+    var contactName by remember { mutableStateOf("") }
+    var contactNumber by remember { mutableStateOf("") }
+    var contacts by remember { mutableStateOf(emptyList<Contact>()) }
+
+    val shouldLoadContacts = remember { mutableStateOf(false) }
+    val shouldSaveContact = remember { mutableStateOf(false) }
+
+    //contacts = loadContacts(context = context)
+
+    var isFetchingContacts by remember { mutableStateOf(false) }
+
+    if (shouldLoadContacts.value) {
+        contacts = loadContacts(context = context)
+        shouldLoadContacts.value = false
+    }
+
+    if (shouldSaveContact.value) {
+        addContact(context = context, name = contactName, number = contactNumber)
+        shouldSaveContact.value = false
+        contacts = loadContacts(context = context)
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
+    ) {
+        // Input fields
+        OutlinedTextField(
+            value = contactName,
+            onValueChange = { contactName = it },
+            label = { Text("Contact Name") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+
+        OutlinedTextField(
+            value = contactNumber,
+            onValueChange = { contactNumber = it },
+            label = { Text("Contact Number") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+        )
+
+        // Buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = {
+                    shouldLoadContacts.value = true
+                },
+            ) {
+                Text("Load Contacts")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = { shouldSaveContact.value = true},
+            ) {
+                Text("Add Contact")
+            }
+        }
+
+        // Contacts List
+        LazyColumn {
+            items(contacts) { contact ->
+                Text(contact.displayName, modifier = Modifier.padding(8.dp))
+            }
+        }
+    }
+}
+
+@SuppressLint("Range")
+@Composable
+fun loadContacts(context: ComponentActivity): List<Contact> {
+    val contacts = mutableListOf<Contact>()
+
+    // Use the content resolver to query contacts
+    context.contentResolver.query(
+        ContactsContract.Contacts.CONTENT_URI,
+        arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
+        null,
+        null,
+        ContactsContract.Contacts.DISPLAY_NAME
+    )?.use { cursor ->
+        // Check if the cursor has data
+        if (cursor.moveToFirst()) {
+            do {
+                // Retrieve display name from the cursor and add to the list
+                val displayName =
+                    cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY))
+                contacts.add(Contact(displayName))
+            } while (cursor.moveToNext())
+        }
+    }
+
+    return contacts
+}
+
+@Composable
+fun addContact(context: ComponentActivity, name: String, number: String){
+    val ops = ArrayList<ContentProviderOperation>()
+
+    // Create a new raw contact
+    ops.add(
+        ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+            .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+            .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+            .build()
     )
+
+    // Add contact's name
+    ops.add(
+        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(
+                ContactsContract.Data.MIMETYPE,
+                ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+            )
+            .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+            .build()
+    )
+
+    // Add contact's phone number
+    ops.add(
+        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(
+                ContactsContract.Data.MIMETYPE,
+                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+            )
+            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+            .withValue(
+                ContactsContract.CommonDataKinds.Phone.TYPE,
+                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+            )
+            .build()
+    )
+
+    // Execute the operations
+    try {
+        context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+        Toast.makeText(context, "Successful", Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {
+        // Handle the exception, e.g., show an error message
+        Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+        e.printStackTrace()
+    }
+
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun ContactManagerPreview() {
+    val context = LocalContext.current as ComponentActivity
     MAPD721A2ShubhamPatelTheme {
-        Greeting("Android")
+        ContactManager(context = context)
     }
 }
