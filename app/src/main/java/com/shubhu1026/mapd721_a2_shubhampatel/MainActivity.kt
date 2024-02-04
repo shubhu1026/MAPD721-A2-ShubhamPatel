@@ -15,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.shubhu1026.mapd721_a2_shubhampatel.ui.theme.MAPD721A2ShubhamPatelTheme
@@ -62,53 +64,70 @@ fun ContactManager(context: ComponentActivity) {
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxSize()
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Input fields
-        OutlinedTextField(
-            value = contactName,
-            onValueChange = { contactName = it },
-            label = { Text("Contact Name") },
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = contactNumber,
-            onValueChange = { contactNumber = it },
-            label = { Text("Contact Number") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-        )
-
-        // Buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                onClick = {
-                    shouldLoadContacts.value = true
-                },
+            // Input fields
+            OutlinedTextField(
+                value = contactName,
+                onValueChange = { contactName = it },
+                label = { Text("Contact Name") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            )
+
+            OutlinedTextField(
+                value = contactNumber,
+                onValueChange = { contactNumber = it },
+                label = { Text("Contact Number") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            )
+
+            // Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Load Contacts")
+                Button(
+                    onClick = {
+                        shouldLoadContacts.value = true
+                    },
+                ) {
+                    Text("Load Contacts")
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(
+                    onClick = { shouldSaveContact.value = true },
+                ) {
+                    Text("Add Contact")
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Button(
-                onClick = { shouldSaveContact.value = true},
-            ) {
-                Text("Add Contact")
-            }
+            // Contacts List
+            Text(
+                "Contacts:",
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = TextStyle(fontWeight = FontWeight.Bold)
+            )
         }
 
-        // Contacts List
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(bottom = 10.dp)
+        ) {
             items(contacts) { contact ->
                 Column(
                     modifier = Modifier
@@ -116,9 +135,31 @@ fun ContactManager(context: ComponentActivity) {
                         .fillMaxWidth()
                 ) {
                     Text(contact.displayName, modifier = Modifier.padding(bottom = 4.dp))
-                    Text(contact.phoneNumber, modifier = Modifier.padding(top = 4.dp), color = Color.Gray)
+                    Text(
+                        contact.phoneNumber,
+                        color = Color.Gray
+                    )
                 }
             }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            Text(
+                "Student Name",
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = TextStyle(fontWeight = FontWeight.Bold)
+            )
+            Text("Shubham Patel", modifier = Modifier.padding(bottom = 8.dp))
+
+            Text(
+                "Student Number",
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = TextStyle(fontWeight = FontWeight.Bold)
+            )
+            Text("301366205", modifier = Modifier.padding(bottom = 16.dp))
         }
     }
 }
@@ -153,7 +194,7 @@ fun loadContacts(context: ComponentActivity): List<Contact> {
 }
 
 @Composable
-fun addContact(context: ComponentActivity, name: String, number: String){
+fun addContact(context: ComponentActivity, name: String, number: String) {
     val ops = ArrayList<ContentProviderOperation>()
 
     // Create a new raw contact
