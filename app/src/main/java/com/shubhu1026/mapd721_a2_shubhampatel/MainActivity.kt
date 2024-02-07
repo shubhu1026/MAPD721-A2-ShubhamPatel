@@ -27,7 +27,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MAPD721A2ShubhamPatelTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -207,7 +206,7 @@ fun loadContacts(context: ComponentActivity): List<Contact> {
 fun addContact(context: ComponentActivity, name: String, number: String) {
     val ops = ArrayList<ContentProviderOperation>()
 
-    // Create a new raw contact
+    // Creating a new raw contact
     ops.add(
         ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
             .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
@@ -215,7 +214,7 @@ fun addContact(context: ComponentActivity, name: String, number: String) {
             .build()
     )
 
-    // Add contact's name
+    // contact's name
     ops.add(
         ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
             .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
@@ -227,7 +226,7 @@ fun addContact(context: ComponentActivity, name: String, number: String) {
             .build()
     )
 
-    // Add contact's phone number
+    // contact's phone number
     ops.add(
         ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
             .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
@@ -243,12 +242,12 @@ fun addContact(context: ComponentActivity, name: String, number: String) {
             .build()
     )
 
-    // Execute the operations
+    // Executing the operations
     try {
         context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
         Toast.makeText(context, "Successful", Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
-        // Handle the exception, e.g., show an error message
+        // show error message
         Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
         e.printStackTrace()
     }
